@@ -58,7 +58,7 @@ def animate(time):
 	ax1.clear()
 	ax1.scatter(pool.getX(), pool.getY(), c = [colors_people[j] for j in status], marker = '.', \
 				alpha = 0.5, s = 10)
-	ax1.set_title(f'Time:{time:<10}susceptible:{Susceptible:<10}Incubated:{incubated:<10}Exposed:{exposed}')
+	ax1.set_title(f'Time:{time:<10}Susceptible:{susceptible:<10}Incubated:{incubated:<10}Exposed:{exposed}')
 	ax1.set_xticks([])
 	ax1.set_yticks([])
 	ax1.set_xlim(-5000, 5000)
