@@ -4,11 +4,12 @@ from scipy.spatial.distance import cdist
 from math import sqrt
 
 class PeoplePool:
-	def __init__(self, num, city, BROAD_RATE, SHADOW_TIME, \
+	def __init__(self, num, city, BROAD_RATE, DEATH_RATE, SHADOW_TIME, \
 			HOSPITAL_RECEIVE_TIME, CURE_TIME, SAFETY_DIST, u, FLUCTUATION):
 		# self.city = city
 		self.peoples = np.array([])
 		self.BROAD_RATE = BROAD_RATE
+		self.DEATH_RATE = DEATH_RATE
 		self.SHADOW_TIME = SHADOW_TIME
 		self.HOSPITAL_RECEIVE_TIME = HOSPITAL_RECEIVE_TIME
 		self.CURE_TIME = CURE_TIME
@@ -60,6 +61,9 @@ class PeoplePool:
 					people.confirmed_time = time
 					people.status = 2
 			elif people.status == 2:
+				if np.random.rand() < self.DEATH_RATE:
+					people.status = 4
+					continue
 				if (time - people.confirmed_time) > np.random.normal(self.HOSPITAL_RECEIVE_TIME, self.FLUCTUATION):
 					tmp = hospital.pickBed()
 					if tmp == None:
@@ -69,6 +73,11 @@ class PeoplePool:
 						people.status = 3
 						people.hospitalized_time = time
 			elif people.status == 3:
+				if np.random.rand() < self.DEATH_RATE / 10:
+					people.status = 4
+					people.bed.isEmpty = True
+					people.bed = None
+					continue
 				if (time - people.hospitalized_time) > np.random.normal(self.CURE_TIME, self.FLUCTUATION):
 					people.status = 0
 					people.bed.isEmpty = True
@@ -76,5 +85,6 @@ class PeoplePool:
 					people.hospitalized_time = None
 					people.confirmed_time = None
 					people.infected_time = None
-
+			elif people.status == 4:
+				continue
 			people.move(self.u, self.SCALE)

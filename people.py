@@ -5,7 +5,7 @@ class People:
 		self.x = x
 		self.y = y
 		# self.city = city
-		self.status = 0 #0未感染，1潜伏期，2感染, 3住院
+		self.status = 0 #0未感染，1潜伏期，2感染, 3住院, 4病死
 		self.bed = None
 		self.infected_time = None
 		self.confirmed_time = None

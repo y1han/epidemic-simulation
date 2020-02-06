@@ -10,13 +10,14 @@ from matplotlib import animation
 line = ['l', 'line']
 
 def graph(city, pool, hos, mode=line[0]):
-	colors_people = ['white', 'yellow', 'red', 'black'] #0未感染，1潜伏期，2感染, 3住院
+	#0未感染, 1潜伏期, 2确诊, 3住院, 4病死, 5总体得病(仅包含确诊), 6总存活人数, 7传染源
+	colors_people = ['white', 'yellow', 'red', 'black', 'black', 'purple', 'grey', 'blue'] 
 	colors_bed = ['red', 'black'] #0有人，1无人
 
 	fig = plt.figure(figsize=(20, 10))
 	plt.style.use('dark_background')
 	fig.patch.set_facecolor('black')
-	grid = plt.GridSpec(3, 5, wspace=0.5, hspace=0.5)
+	grid = plt.GridSpec(3, 5, wspace=0.3, hspace=0.3)
 	ax1 = plt.subplot(grid[0:3, 0:3])
 	ax2 = plt.subplot(grid[0:3, 3])
 
@@ -26,8 +27,11 @@ def graph(city, pool, hos, mode=line[0]):
 
 	if mode in line:
 		ax3_ydata = [0, 0]
+		ax3_totdata = [0, 0]
 		ax4_ydata = [0, 0]
+		ax4_totdata = [0, 0]
 		ax5_ydata = [0, 0]
+		ax5_totdata = [0, 0]
 
 	hosX = hos.getX()
 	hosY = hos.getY()
@@ -43,11 +47,17 @@ def graph(city, pool, hos, mode=line[0]):
 		incubated = np.sum(status == 1)
 		exposed = np.sum(status == 2)
 		hospitalized = np.sum(status_hos == False)
+		illed = exposed + hospitalized # 仅包含确诊
+		contagious = incubated + exposed # 能传染给他人的
+		total = susceptible + incubated + illed
 
 		if mode in line:
 			ax3_ydata[1] = susceptible
+			ax3_totdata[1] = total
 			ax4_ydata[1] = incubated
+			ax4_totdata[1] = contagious
 			ax5_ydata[1] = exposed
+			ax5_totdata[1] = illed
 
 		fig.canvas.restore_region(axbackground)
 		fig.canvas.restore_region(ax2background)
@@ -71,23 +81,32 @@ def graph(city, pool, hos, mode=line[0]):
 		if mode in line:
 			if (time >= 1):
 				ax3.plot([time-1, time], ax3_ydata, color = colors_people[0])
+				ax3.plot([time-1, time], ax3_totdata, color = colors_people[6])
 				ax4.plot([time-1, time], ax4_ydata, color = colors_people[1])
+				ax4.plot([time-1, time], ax4_totdata, color = colors_people[7])
 				ax5.plot([time-1, time], ax5_ydata, color = colors_people[2])
+				ax5.plot([time-1, time], ax5_totdata, color = colors_people[5])
 		else:
+			ax3.bar(time, total, color = colors_people[6], width=1)
 			ax3.bar(time, susceptible, color = colors_people[0], width=1)
+			ax4.bar(time, contagious, color = colors_people[7], width=1)
 			ax4.bar(time, incubated, color = colors_people[1], width=1)
+			ax5.bar(time, illed, color = colors_people[5], width=1)
 			ax5.bar(time, exposed, color = colors_people[2], width=1)
 
-		ax3.set_title(f'Susceptible:{susceptible}')
-		ax4.set_title(f'Incubated:{incubated}')
-		ax5.set_title(f'Exposed:{exposed}')
+		ax3.set_title(f'total({colors_people[6]}):{total:<6}\nsusceptible({colors_people[0]}):{susceptible}')
+		ax4.set_title(f'contagious({colors_people[7]}):{contagious:<6}\nincubated({colors_people[1]}):{incubated}')
+		ax5.set_title(f'illed({colors_people[5]}):{illed:<6}\nexposed({colors_people[2]}):{exposed}')
 
 		pool.update(time, hos)
 		# plt.pause(0.00001)
 		if mode in line:
 			ax3_ydata[0] = susceptible
+			ax3_totdata[0] = total
 			ax4_ydata[0] = incubated
+			ax4_totdata[0] = contagious
 			ax5_ydata[0] = exposed
+			ax5_totdata[0] = illed
 
 		return 0
 
