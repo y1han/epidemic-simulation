@@ -5,7 +5,7 @@ from math import sqrt
 
 class PeoplePool:
 	def __init__(self, num, city, BROAD_RATE, SHADOW_TIME, \
-			HOSPITAL_RECEIVE_TIME, CURE_TIME, SAFETY_DIST):
+			HOSPITAL_RECEIVE_TIME, CURE_TIME, SAFETY_DIST, u):
 		# self.city = city
 		self.peoples = np.array([])
 		self.BROAD_RATE = BROAD_RATE
@@ -13,6 +13,7 @@ class PeoplePool:
 		self.HOSPITAL_RECEIVE_TIME = HOSPITAL_RECEIVE_TIME
 		self.CURE_TIME = CURE_TIME
 		self.SAFETY_DIST = SAFETY_DIST
+		self.u = u
 		for i in range(num):
 			x = 1000*np.random.normal(0, 1) + city.centerX
 			y = 1000*np.random.normal(0, 1) + city.centerY
@@ -30,7 +31,7 @@ class PeoplePool:
 	def getCoordinates(self):
 		return np.array([(i.x, i.y) for i in self.peoples])
 
-	def update(self, time, hospital, u):
+	def update(self, time, hospital):
 		peoples = self.peoples
 		coord = self.getCoordinates()
 		dists = cdist(coord, coord)
@@ -74,4 +75,4 @@ class PeoplePool:
 					people.confirmed_time = None
 					people.infected_time = None
 
-			people.move(u)
+			people.move(self.u)
