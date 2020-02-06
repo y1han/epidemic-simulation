@@ -47,7 +47,7 @@ ax2background = fig.canvas.copy_from_bbox(ax2.bbox)
 def animate(time):
 	status = pool.getStatus()
 	status_hos = hos.getStatus()
-	suspected = np.sum(status == 0)
+	susceptible = np.sum(status == 0)
 	incubated = np.sum(status == 1)
 	exposed = np.sum(status == 2)
 	hospitalized = np.sum(status_hos == False)
@@ -58,7 +58,7 @@ def animate(time):
 	ax1.clear()
 	ax1.scatter(pool.getX(), pool.getY(), c = [colors_people[j] for j in status], marker = '.', \
 				alpha = 0.5, s = 10)
-	ax1.set_title(f'Time:{time:<10}Suspected:{suspected:<10}Incubated:{incubated:<10}Exposed:{exposed}')
+	ax1.set_title(f'Time:{time:<10}susceptible:{Susceptible:<10}Incubated:{incubated:<10}Exposed:{exposed}')
 	ax1.set_xticks([])
 	ax1.set_yticks([])
 	ax1.set_xlim(-5000, 5000)
@@ -71,8 +71,8 @@ def animate(time):
 	ax2.set_xticks([])
 	ax2.set_yticks([])
 
-	ax3.bar(time, suspected, color = colors_people[0], width=1)
-	ax3.set_title(f'Suspected:{suspected}')
+	ax3.bar(time, susceptible, color = colors_people[0], width=1)
+	ax3.set_title(f'Susceptible:{susceptible}')
 	ax4.bar(time, incubated, color = colors_people[1], width=1)
 	ax4.set_title(f'Incubated:{incubated}')
 	ax5.bar(time, exposed, color = colors_people[2], width=1)
