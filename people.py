@@ -11,6 +11,6 @@ class People:
 		self.confirmed_time = None
 		self.hospitalized_time = None
 
-	def move(self, u):
-		self.x += u*20*np.random.normal(0, 1)
-		self.y += u*20*np.random.normal(0, 1)
+	def move(self, u, SCALE):
+		self.x += u*SCALE/50*np.random.normal(0, 1)
+		self.y += u*SCALE/50*np.random.normal(0, 1)

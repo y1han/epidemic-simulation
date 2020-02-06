@@ -14,10 +14,11 @@ class PeoplePool:
 		self.CURE_TIME = CURE_TIME
 		self.SAFETY_DIST = SAFETY_DIST
 		self.FLUCTUATION = FLUCTUATION
+		self.SCALE = 1000
 		self.u = u
 		for i in range(num):
-			x = 1000*np.random.normal(0, 1) + city.centerX
-			y = 1000*np.random.normal(0, 1) + city.centerY
+			x = self.SCALE*np.random.normal(0, 1) + city.centerX
+			y = self.SCALE*np.random.normal(0, 1) + city.centerY
 			self.peoples = np.append(self.peoples, People(x, y))
 	
 	def getX(self, hospitalized_included=False):
@@ -76,4 +77,4 @@ class PeoplePool:
 					people.confirmed_time = None
 					people.infected_time = None
 
-			people.move(self.u)
+			people.move(self.u, self.SCALE)

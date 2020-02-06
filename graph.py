@@ -36,6 +36,7 @@ def graph(city, pool, hos, mode=line[0]):
 	ax2background = fig.canvas.copy_from_bbox(ax2.bbox)
 
 	def animate(time):
+		boundry = 5 * pool.SCALE
 		status = pool.getStatus()
 		status_hos = hos.getStatus()
 		susceptible = np.sum(status == 0)
@@ -57,8 +58,8 @@ def graph(city, pool, hos, mode=line[0]):
 		ax1.set_title(f'Time:{time:<10}Susceptible:{susceptible:<10}Incubated:{incubated:<10}Exposed:{exposed}')
 		ax1.set_xticks([])
 		ax1.set_yticks([])
-		ax1.set_xlim(-5000, 5000)
-		ax1.set_ylim(-5000, 5000)
+		ax1.set_xlim(-boundry, boundry)
+		ax1.set_ylim(-boundry, boundry)
 
 		ax2.clear()
 		ax2.scatter(hosX, hosY, c = [colors_bed[j] for j in status_hos], marker = '.', \
