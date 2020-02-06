@@ -5,7 +5,7 @@ from math import sqrt
 
 class PeoplePool:
 	def __init__(self, num, city, BROAD_RATE, SHADOW_TIME, \
-			HOSPITAL_RECEIVE_TIME, CURE_TIME, SAFETY_DIST, u):
+			HOSPITAL_RECEIVE_TIME, CURE_TIME, SAFETY_DIST, u, FLUCTUATION):
 		# self.city = city
 		self.peoples = np.array([])
 		self.BROAD_RATE = BROAD_RATE
@@ -13,6 +13,7 @@ class PeoplePool:
 		self.HOSPITAL_RECEIVE_TIME = HOSPITAL_RECEIVE_TIME
 		self.CURE_TIME = CURE_TIME
 		self.SAFETY_DIST = SAFETY_DIST
+		self.FLUCTUATION = FLUCTUATION
 		self.u = u
 		for i in range(num):
 			x = 1000*np.random.normal(0, 1) + city.centerX
@@ -54,11 +55,11 @@ class PeoplePool:
 				# 				people.status = 1
 				# 				break
 			elif people.status == 1:
-				if (time - people.infected_time) > self.SHADOW_TIME:
+				if (time - people.infected_time) > np.random.normal(self.SHADOW_TIME, self.FLUCTUATION):
 					people.confirmed_time = time
 					people.status = 2
 			elif people.status == 2:
-				if (time - people.confirmed_time) > self.HOSPITAL_RECEIVE_TIME:
+				if (time - people.confirmed_time) > np.random.normal(self.HOSPITAL_RECEIVE_TIME, self.FLUCTUATION):
 					tmp = hospital.pickBed()
 					if tmp == None:
 						print(f"Time={time:<6}无隔离病房床位")
@@ -67,7 +68,7 @@ class PeoplePool:
 						people.status = 3
 						people.hospitalized_time = time
 			elif people.status == 3:
-				if (time - people.hospitalized_time) > self.CURE_TIME:
+				if (time - people.hospitalized_time) > np.random.normal(self.CURE_TIME, self.FLUCTUATION):
 					people.status = 0
 					people.bed.isEmpty = True
 					people.bed = None
