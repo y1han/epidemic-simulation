@@ -31,8 +31,5 @@
 	recovered_included 是否有免疫期
 	mode ‘l'或者'line'运行时右侧为折线图,否则为柱状图
 
-图示1 (Bar):
-![image](https://github.com/y1han/virus-simulation/raw/master/images/desc_bar.jpeg)  
-
-图示2 (Line):
+图示:
 ![image](https://github.com/y1han/virus-simulation/raw/master/images/desc_line.jpeg)
