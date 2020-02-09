@@ -15,12 +15,12 @@ class People:
 	def move(self, u, SCALE):
 		self.x += u*SCALE/50*np.random.normal(0, 1)
 		self.y += u*SCALE/50*np.random.normal(0, 1)
-		boundry = 5 * SCALE
-		if self.x > boundry:
-			self.x = boundry
-		elif self.x < -boundry:
-			self.x = -boundry
-		if self.y > boundry:
-			self.y = boundry
-		elif self.y < -boundry:
-			self.y = -boundry
+		# boundry = 5 * SCALE
+		# if self.x > boundry:
+		# 	self.x = boundry
+		# elif self.x < -boundry:
+		# 	self.x = -boundry
+		# if self.y > boundry:
+		# 	self.y = boundry
+		# elif self.y < -boundry:
+		# 	self.y = -boundry

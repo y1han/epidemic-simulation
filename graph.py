@@ -1,11 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
+from matplotlib import animation
 from bed import Bed
 from city import City
 from hospital import Hospital
 from people import People
 from peoplepool import PeoplePool
-from matplotlib import animation
 
 line = ['l', 'line']
 
@@ -40,7 +41,7 @@ def graph(city, pool, hos, mode=line[0]):
 	axbackground = fig.canvas.copy_from_bbox(ax1.bbox)
 	ax2background = fig.canvas.copy_from_bbox(ax2.bbox)
 
-	def animate(time):
+	def animate(time, hos):
 		boundry = 5 * pool.SCALE
 		status = pool.getStatus()
 		status_hos = hos.getStatus()
@@ -145,9 +146,6 @@ def graph(city, pool, hos, mode=line[0]):
 			ax4_contagious_data[0] = contagious
 			ax5_infective_data[0] = infective
 			ax5_diagnosed_data[0] = diagnosed
-
-		return 0
-
-	ani = animation.FuncAnimation(fig=fig, func=animate)
-
+	
+	ani = animation.FuncAnimation(fig=fig, interval=1, func=animate, fargs=(hos,))
 	plt.show()

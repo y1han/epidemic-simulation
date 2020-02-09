@@ -1,14 +1,14 @@
 from people import People
 import numpy as np
 from scipy.spatial.distance import cdist
-from math import sqrt
 
 class PeoplePool:
-	def __init__(self, num, city, BROAD_RATE, DEATH_RATE, EXPOSED_TIME, IMMUNED_TIME, \
+	def __init__(self, num, city, BROAD_RATE, PROTECTION_RATE, DEATH_RATE, EXPOSED_TIME, IMMUNED_TIME, \
 			HOSPITAL_RECEIVE_TIME, CURE_TIME, SAFETY_DIST, u, FLUCTUATION, can_exposed_infect, recovered_included):
 		# self.city = city
 		self.peoples = np.array([])
 		self.BROAD_RATE = BROAD_RATE
+		self.PROTECTION_RATE = PROTECTION_RATE
 		self.DEATH_RATE = DEATH_RATE
 		self.EXPOSED_TIME = EXPOSED_TIME
 		self.HOSPITAL_RECEIVE_TIME = HOSPITAL_RECEIVE_TIME
@@ -17,7 +17,7 @@ class PeoplePool:
 		self.SAFETY_DIST = SAFETY_DIST
 		self.FLUCTUATION = FLUCTUATION
 		self.SCALE = 1000
-		self.u = u
+		self.u = np.exp(u)
 		self.can_exposed_infect = can_exposed_infect
 		self.recovered_included = recovered_included
 		self.Tg = []
@@ -46,7 +46,8 @@ class PeoplePool:
 		return np.array([(i.x, i.y) for i in self.peoples])
 
 	def update(self, time, hospital):
-		in_touch = 0
+		self.BROAD_RATE *= np.exp(-self.PROTECTION_RATE)
+		self.in_touch = 0
 		peoples = self.peoples
 		coord = self.getCoordinates()
 		dists = cdist(coord, coord)
@@ -55,7 +56,7 @@ class PeoplePool:
 				index_neighbors = np.where(dists[idx] < self.SAFETY_DIST)[0]
 				for index in index_neighbors:
 					if peoples[index].status in self.can_infect_status:
-							in_touch += 1
+							self.in_touch += 1
 							if np.random.rand() < self.BROAD_RATE:
 								people.infected_time = time
 								people.status = 1
@@ -68,8 +69,7 @@ class PeoplePool:
 			elif people.status == 2:
 				if np.random.rand() < self.DEATH_RATE:
 					people.status = 5
-					continue
-				if (time - people.confirmed_time) > np.random.randint(self.HOSPITAL_RECEIVE_TIME-self.FLUCTUATION, self.HOSPITAL_RECEIVE_TIME+self.FLUCTUATION+1):
+				elif (time - people.confirmed_time) > np.random.randint(self.HOSPITAL_RECEIVE_TIME-self.FLUCTUATION, self.HOSPITAL_RECEIVE_TIME+self.FLUCTUATION+1):
 					tmp = hospital.pickBed()
 					if tmp == None:
 						print(f"Time={time:<6}无隔离病房床位")
@@ -84,8 +84,7 @@ class PeoplePool:
 					people.status = 5
 					people.bed.isEmpty = True
 					people.bed = None
-					continue
-				if (time - people.hospitalized_time) > np.random.randint(self.CURE_TIME-self.FLUCTUATION, self.CURE_TIME+self.FLUCTUATION+1):
+				elif (time - people.hospitalized_time) > np.random.randint(self.CURE_TIME-self.FLUCTUATION, self.CURE_TIME+self.FLUCTUATION+1):
 					if self.recovered_included:
 						people.status = 4
 						people.immuned_time = time
@@ -103,4 +102,4 @@ class PeoplePool:
 			elif people.status == 5:
 				continue
 			people.move(self.u, self.SCALE)
-		self.in_touch = in_touch
+		return self
