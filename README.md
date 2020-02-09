@@ -32,4 +32,4 @@
 	mode ‘l'或者'line'运行时右侧为折线图,否则为柱状图
 
 图示:
-![image](https://github.com/y1han/virus-simulation/raw/master/images/desc_line.jpeg)
+![image](https://github.com/y1han/virus-simulation/raw/master/images/desc.jpeg)
