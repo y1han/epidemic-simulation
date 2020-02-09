@@ -17,6 +17,7 @@
 #### 可用参数:  
 	ORIGINAL_COUNT 初始感染数量  
 	BROAD_RATE  传播率  
+	PROTECTION_RATE 保护措施增长率(连续)  
 	SHADOW_TIME 平均潜伏时间  
 	HOSPITAL_RECEIVE_TIME 平均医院收治时间  
 	CURE_TIME 平均治疗时间  
