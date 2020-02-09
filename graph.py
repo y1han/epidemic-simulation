@@ -14,17 +14,19 @@ def graph(city, pool, hos, mode=line[0]):
 	#0未感染, 1潜伏期, 2确诊, 3住院(在地图上无), 4免疫期, 5病死, 6总体得病(仅包含确诊), 7总存活人数, 8传染源, 
 	colors_people = ['white', 'yellow', 'red', 'black', 'green', 'black', 'purple', 'grey', 'blue'] 
 	colors_bed = ['red', 'black'] #0有人，1无人
+	colors_statics = ['white'] #1-R0,
 
 	fig = plt.figure(figsize=(20, 10))
 	plt.style.use('dark_background')
 	fig.patch.set_facecolor('black')
 	grid = plt.GridSpec(3, 5, wspace=0.4, hspace=0.3)
 	ax1 = plt.subplot(grid[0:3, 0:3])
-	ax2 = plt.subplot(grid[0:3, 3])
+	ax2 = plt.subplot(grid[0:2, 3])
 
 	ax3 = plt.subplot(grid[0, 4])
 	ax4 = plt.subplot(grid[1, 4])
 	ax5 = plt.subplot(grid[2, 4])
+	ax6 = plt.subplot(grid[2, 3])
 
 	if mode in line:
 		ax3_susceptible_data = [0, 0]
@@ -34,12 +36,17 @@ def graph(city, pool, hos, mode=line[0]):
 		ax4_contagious_data = [0, 0]
 		ax5_infective_data = [0, 0]
 		ax5_diagnosed_data = [0, 0]
+		ax6_r0_data = [0, 0]
 
 	hosX = hos.getX()
 	hosY = hos.getY()
 
 	axbackground = fig.canvas.copy_from_bbox(ax1.bbox)
 	ax2background = fig.canvas.copy_from_bbox(ax2.bbox)
+	ax3background = fig.canvas.copy_from_bbox(ax3.bbox)
+	ax4background = fig.canvas.copy_from_bbox(ax4.bbox)
+	ax5background = fig.canvas.copy_from_bbox(ax5.bbox)
+	ax6background = fig.canvas.copy_from_bbox(ax6.bbox)
 
 	def animate(time, hos):
 		boundry = 5 * pool.SCALE
@@ -82,9 +89,14 @@ def graph(city, pool, hos, mode=line[0]):
 			ax4_contagious_data[1] = contagious
 			ax5_infective_data[1] = infective
 			ax5_diagnosed_data[1] = diagnosed
+			ax6_r0_data[1] = R0
 
 		fig.canvas.restore_region(axbackground)
 		fig.canvas.restore_region(ax2background)
+		fig.canvas.restore_region(ax3background)
+		fig.canvas.restore_region(ax4background)
+		fig.canvas.restore_region(ax5background)
+		fig.canvas.restore_region(ax6background)
 
 		ax1.clear()
 		ax1.scatter(pool.getX(), pool.getY(), c = [colors_people[j] for j in status], marker = '.', \
@@ -109,6 +121,7 @@ def graph(city, pool, hos, mode=line[0]):
 		color_exposed = colors_people[1]
 		color_infective = colors_people[2]
 		color_recovered = colors_people[4]
+		color_R0 = colors_statics[0]
 
 		if mode in line:
 			if (time >= 1):
@@ -121,6 +134,7 @@ def graph(city, pool, hos, mode=line[0]):
 				ax4.plot([time-1, time], ax4_contagious_data, color = color_contagious)
 				ax5.plot([time-1, time], ax5_infective_data, color = color_infective)
 				ax5.plot([time-1, time], ax5_diagnosed_data, color = color_diagnosed)
+				ax6.plot([time-1, time], ax6_r0_data, color = color_R0)
 		else:
 			ax3.bar(time, total, color = color_total, width=1)
 			ax3.bar(time, susceptible, color = color_susceptible, width=1)
@@ -131,10 +145,12 @@ def graph(city, pool, hos, mode=line[0]):
 			ax4.bar(time, exposed, color = color_exposed, width=1)
 			ax5.bar(time, diagnosed, color = color_diagnosed, width=1)
 			ax5.bar(time, infective, color = color_infective, width=1)
+			ax6.bar(time, R0, color = color_R0, width=1)
 
 		ax3.set_title(f'total({color_total}):{total}\nsusceptible({color_susceptible}):{susceptible}\nrecovered({color_recovered}):{recovered}\nexposed({color_exposed}):{exposed}\ninfective({color_infective}):{infective}')
 		ax4.set_title(f'contagious({color_contagious}):{contagious}\nexposed({color_exposed}):{exposed}')
 		ax5.set_title(f'diagnosed({color_diagnosed}):{diagnosed}\ninfective({color_infective}):{infective}')
+		ax6.set_title(f'R0({color_R0}):{R0:.2f}\nBROAD_RATE:{pool.BROAD_RATE:.2f}')
 
 		pool.update(time, hos)
 		# plt.pause(0.00001)
@@ -146,6 +162,7 @@ def graph(city, pool, hos, mode=line[0]):
 			ax4_contagious_data[0] = contagious
 			ax5_infective_data[0] = infective
 			ax5_diagnosed_data[0] = diagnosed
+			ax6_r0_data[0] = R0
 	
 	ani = animation.FuncAnimation(fig=fig, interval=1, func=animate, fargs=(hos,))
 	plt.show()
