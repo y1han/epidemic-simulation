@@ -6,7 +6,7 @@ from graph import graph
 
 def init():
 	ORIGINAL_COUNT = 50 #初始感染数量
-	BROAD_RATE = 0.5 #被传染概率
+	BROAD_RATE = 0.8 #被传染概率
 	EXPOSED_TIME = 5 #平均潜伏时间
 	HOSPITAL_RECEIVE_TIME = 3 #平均医院收治时间
 	CURE_TIME = 14 #平均治疗时间
@@ -14,7 +14,7 @@ def init():
 	DEATH_RATE = 0.01/(CURE_TIME+10*HOSPITAL_RECEIVE_TIME) #每日死亡概率
 	BED_COUNT = 500 #医院床位
 	SAFETY_DIST = 10 #安全距离
-	FLUCTUATION = 4 #各参数与平均值之间的波动
+	FLUCTUATION = 4 #各参数与平 均值之间的波动
 	u = np.exp(1) #流动意向
 	PERSON_COUNT = 10000 #城市内人数
 	can_exposed_infect = True # 潜伏期能否感染他人
