@@ -6,6 +6,7 @@ class PeoplePool:
 	def __init__(self, num, city, BROAD_RATE, PROTECTION_RATE, DEATH_RATE, EXPOSED_TIME, IMMUNED_TIME, \
 			HOSPITAL_RECEIVE_TIME, CURE_TIME, SAFETY_DIST, u, FLUCTUATION, can_exposed_infect, recovered_included):
 		# self.city = city
+		self.num = num
 		self.peoples = np.array([])
 		self.BROAD_RATE = BROAD_RATE
 		self.PROTECTION_RATE = PROTECTION_RATE
@@ -45,8 +46,13 @@ class PeoplePool:
 	def getCoordinates(self):
 		return np.array([(i.x, i.y) for i in self.peoples])
 
-	def update(self, time, hospital):
-		self.BROAD_RATE *= np.exp(-self.PROTECTION_RATE)
+	def update(self, time, hospital, cond):
+		cond.acquire()
+		cond.wait()
+		protection_factor = np.exp(-self.PROTECTION_RATE)
+		self.BROAD_RATE *= protection_factor
+		self.u *= protection_factor
+		self.DEATH_RATE *= protection_factor
 		self.in_touch = 0
 		peoples = self.peoples
 		coord = self.getCoordinates()
@@ -102,4 +108,5 @@ class PeoplePool:
 			elif people.status == 5:
 				continue
 			people.move(self.u, self.SCALE)
-		return self
+		cond.notify()
+		cond.release()

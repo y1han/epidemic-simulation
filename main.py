@@ -7,7 +7,7 @@ from graph import graph
 def init():
 	ORIGINAL_COUNT = 50 #初始感染数量
 	BROAD_RATE = 0.8 #被传染概率
-	PROTECTION_RATE = 0.001 # 保护措施增长率
+	PROTECTION_RATE = 0.001 # 保护措施增长率(连续)(影响BROAD_RATE和u)
 	EXPOSED_TIME = 5 #平均潜伏时间
 	HOSPITAL_RECEIVE_TIME = 3 #平均医院收治时间
 	CURE_TIME = 10 #平均治疗时间

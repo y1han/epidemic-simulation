@@ -1,12 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib
 from matplotlib import animation
 from bed import Bed
 from city import City
 from hospital import Hospital
 from people import People
 from peoplepool import PeoplePool
+from threading import Thread, Condition
+# import time as tm
 
 line = ['l', 'line']
 
@@ -14,12 +15,14 @@ def graph(city, pool, hos, mode=line[0]):
 	#0未感染, 1潜伏期, 2确诊, 3住院(在地图上无), 4免疫期, 5病死, 6总体得病(仅包含确诊), 7总存活人数, 8传染源, 
 	colors_people = ['white', 'yellow', 'red', 'black', 'green', 'black', 'purple', 'grey', 'blue'] 
 	colors_bed = ['red', 'black'] #0有人，1无人
-	colors_statics = ['white'] #1-R0,
+	colors_statics = ['white'] #1 R0
+	PERSON_COUNT = pool.num
+	BED_COUNT = hos.bed_counts
 
 	fig = plt.figure(figsize=(20, 10))
 	plt.style.use('dark_background')
 	fig.patch.set_facecolor('black')
-	grid = plt.GridSpec(3, 5, wspace=0.4, hspace=0.3)
+	grid = plt.GridSpec(3, 5, wspace=0.5, hspace=0.3)
 	ax1 = plt.subplot(grid[0:3, 0:3])
 	ax2 = plt.subplot(grid[0:2, 3])
 
@@ -41,14 +44,31 @@ def graph(city, pool, hos, mode=line[0]):
 	hosX = hos.getX()
 	hosY = hos.getY()
 
-	axbackground = fig.canvas.copy_from_bbox(ax1.bbox)
+	ax1background = fig.canvas.copy_from_bbox(ax1.bbox)
 	ax2background = fig.canvas.copy_from_bbox(ax2.bbox)
 	ax3background = fig.canvas.copy_from_bbox(ax3.bbox)
 	ax4background = fig.canvas.copy_from_bbox(ax4.bbox)
 	ax5background = fig.canvas.copy_from_bbox(ax5.bbox)
 	ax6background = fig.canvas.copy_from_bbox(ax6.bbox)
 
-	def animate(time, hos):
+	def init():
+		pass
+
+	def multi_process(time):
+		cond = Condition()
+		# start = tm.time()
+		animate_thread = Thread(target=animate, args=(time, cond), name='animate')
+		update_thread = Thread(target=pool.update, args=(time, hos, cond), name='update')
+		update_thread.start()
+		animate_thread.start()
+		update_thread.join()
+		# end = tm.time()
+		# print(f'Time={time:<6}运行用时{(end-start):.2f}秒')
+		return 0
+
+	def animate(time, cond):
+		cond.acquire()
+		cond.notify()
 		boundry = 5 * pool.SCALE
 		status = pool.getStatus()
 		status_hos = hos.getStatus()
@@ -72,9 +92,6 @@ def graph(city, pool, hos, mode=line[0]):
 			else:
 				k = pool.in_touch / infective if infective != 0 else 0
 				R0 = k * pool.BROAD_RATE * Ti
-			# lamda = np.log(diagnosed) / time
-			# rho = Te / Tg
-			# R0 = 1 + lamda * Tg + rho * (1 - rho) * (lamda * Tg) ** 2
 		else:
 			R0 = np.nan
 			Ti = np.nan
@@ -91,7 +108,7 @@ def graph(city, pool, hos, mode=line[0]):
 			ax5_diagnosed_data[1] = diagnosed
 			ax6_r0_data[1] = R0
 
-		fig.canvas.restore_region(axbackground)
+		fig.canvas.restore_region(ax1background)
 		fig.canvas.restore_region(ax2background)
 		fig.canvas.restore_region(ax3background)
 		fig.canvas.restore_region(ax4background)
@@ -110,9 +127,12 @@ def graph(city, pool, hos, mode=line[0]):
 		ax2.clear()
 		ax2.scatter(hosX, hosY, c = [colors_bed[j] for j in status_hos], marker = '.', \
 					alpha = 1, s = 10)
-		ax2.set_title(f'Hospitalized:{hospitalized}/{hos.bed_counts}')
+		ax2.set_title(f'death:{PERSON_COUNT-total}\nhospitalized:{hospitalized}/{BED_COUNT}')
 		ax2.set_xticks([])
 		ax2.set_yticks([])
+
+		cond.wait()
+		cond.release()
 
 		color_total = colors_people[7]
 		color_contagious = colors_people[8]
@@ -150,10 +170,8 @@ def graph(city, pool, hos, mode=line[0]):
 		ax3.set_title(f'total({color_total}):{total}\nsusceptible({color_susceptible}):{susceptible}\nrecovered({color_recovered}):{recovered}\nexposed({color_exposed}):{exposed}\ninfective({color_infective}):{infective}')
 		ax4.set_title(f'contagious({color_contagious}):{contagious}\nexposed({color_exposed}):{exposed}')
 		ax5.set_title(f'diagnosed({color_diagnosed}):{diagnosed}\ninfective({color_infective}):{infective}')
-		ax6.set_title(f'R0({color_R0}):{R0:.2f}\nBROAD_RATE:{pool.BROAD_RATE:.2f}')
+		ax6.set_title(f'R0({color_R0}):{R0:.2f}\nBROAD_RATE:{pool.BROAD_RATE:.2f}\nu:{pool.u:.2f}')
 
-		pool.update(time, hos)
-		# plt.pause(0.00001)
 		if mode in line:
 			ax3_susceptible_data[0] = susceptible
 			ax3_total_data[0] = total
@@ -163,6 +181,6 @@ def graph(city, pool, hos, mode=line[0]):
 			ax5_infective_data[0] = infective
 			ax5_diagnosed_data[0] = diagnosed
 			ax6_r0_data[0] = R0
-	
-	ani = animation.FuncAnimation(fig=fig, interval=1, func=animate, fargs=(hos,))
+
+	ani = animation.FuncAnimation(fig=fig, init_func=init, interval=1, func=multi_process, repeat=False)
 	plt.show()
