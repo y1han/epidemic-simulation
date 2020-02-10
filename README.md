@@ -1,8 +1,5 @@
 # virus-simulation
   A python virus simultation programme  
-  
-由 https://github.com/KikiLetGo/VirusBroadcast 启发进行的python复刻，并进行了一些改动  
-	运行main.py即可
 
 #### 图表信息:  
 	Total 总存活人数  
@@ -34,3 +31,6 @@
 
 图示:
 ![image](https://github.com/y1han/virus-simulation/raw/master/images/desc.jpeg)
+
+由 https://github.com/KikiLetGo/VirusBroadcast 启发进行的python复刻，并进行了一些改动  
+	运行main.py即可
