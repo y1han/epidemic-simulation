@@ -1,5 +1,4 @@
 import numpy as np
-from city import City
 from hospital import Hospital
 from peoplepool import PeoplePool
 from graph import graph
@@ -7,7 +6,7 @@ from graph import graph
 def init():
 	ORIGINAL_COUNT = 50 #初始感染数量
 	BROAD_RATE = 0.8 #被传染概率
-	PROTECTION_RATE = 0.001 # 保护措施增长率(连续)(影响BROAD_RATE和u)
+	PROTECTION_RATE = 0.001 # 保护措施增长率(连续)(影响BROAD_RATE, DEATH_RATE, u)
 	EXPOSED_TIME = 5 #平均潜伏时间
 	HOSPITAL_RECEIVE_TIME = 3 #平均医院收治时间
 	CURE_TIME = 10 #平均治疗时间
@@ -21,7 +20,7 @@ def init():
 	can_exposed_infect = False # 潜伏期能否感染他人
 	recovered_included = True # 是否有免疫期
 
-	city = City(0, 0)
+	city = (0, 0)
 	pool = PeoplePool(PERSON_COUNT, city, BROAD_RATE, PROTECTION_RATE, DEATH_RATE, EXPOSED_TIME, IMMUNED_TIME, \
 					  HOSPITAL_RECEIVE_TIME, CURE_TIME, SAFETY_DIST, u, FLUCTUATION, \
 					  can_exposed_infect, recovered_included)
@@ -29,14 +28,14 @@ def init():
 
 	for i in range(ORIGINAL_COUNT):
 		idx = np.random.randint(0, PERSON_COUNT)
-		pool.peoples[idx].status = 1
-		pool.peoples[idx].infected_time = 0
+		pool.peoples[idx][2] = 1 # 设定status为1，即潜伏
+		pool.peoples[idx][4] = 0 # 设定infected_time = 0
 
-	return city, pool, hos
+	return pool, hos
 
-def choose(city, pool, hos, mode='bar'): # mode='l'或者'line'时为折线图(line)，否则为柱状图(bar)
-	graph(city, pool, hos, mode)
+def choose(pool, hos, mode='bar'): # mode='l'或者'line'时为折线图(line)，否则为柱状图(bar)
+	graph(pool, hos, mode)
 	
 if '__main__' == __name__:
-	city, pool, hos = init()
-	choose(city, pool, hos, 'l')
+	pool, hos = init()
+	choose(pool, hos, 'l')

@@ -1,4 +1,3 @@
-from bed import Bed
 import numpy as np
 
 class Hospital:
@@ -10,24 +9,25 @@ class Hospital:
 		if not bed_counts % self.width == 0:
 			self.column += 1
 		
-		self.beds = np.array([])
+		self.beds = np.empty(shape=(0, 3), dtype=int)
 		for i in range(self.column):
 			for j in range(self.width):
-				bed = Bed(True, i, j)
-				self.beds = np.append(self.beds, bed)
+				bed = [[i, j, 0]]
+				self.beds = np.r_[self.beds, bed]
 
 	def pickBed(self):
-		for bed in self.beds:
-			if bed.isEmpty:
-				bed.isEmpty = False
-				return bed
-		return None
+		try:
+			tmp = np.where(self.beds[:, 2] == False)[0][0]
+			self.beds[tmp, 2] = 1
+			return self.beds[tmp]
+		except:
+			return np.array([])
 
 	def getX(self):
-		return np.array([bed.x for bed in self.beds])
+		return self.beds[:, 0]
 
 	def getY(self):
-		return np.array([bed.y for bed in self.beds])
+		return self.beds[:, 1]
 
 	def getStatus(self):
-		return np.array([bed.isEmpty for bed in self.beds])
+		return self.beds[:, 2]

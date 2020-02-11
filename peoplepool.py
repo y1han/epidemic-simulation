@@ -1,13 +1,21 @@
-from people import People
 import numpy as np
 from scipy.spatial.distance import cdist
+
+dic = {'x':0, 'y':1, 'status':2, 'bed':3, 'infected_time':4, 'confirmed_time':5, 'hospitalized_time':6, 'immuned_time':7}
+x = dic['x']
+y = dic['y']
+status = dic['status']
+bed = dic['bed']
+infected_time = dic['infected_time']
+confirmed_time = dic['confirmed_time']
+hospitalized_time = dic['hospitalized_time']
+immuned_time = dic['immuned_time']
 
 class PeoplePool:
 	def __init__(self, num, city, BROAD_RATE, PROTECTION_RATE, DEATH_RATE, EXPOSED_TIME, IMMUNED_TIME, \
 			HOSPITAL_RECEIVE_TIME, CURE_TIME, SAFETY_DIST, u, FLUCTUATION, can_exposed_infect, recovered_included):
-		# self.city = city
 		self.num = num
-		self.peoples = np.array([])
+		self.peoples = np.empty(shape=(0, len(dic)), dtype=int)
 		self.BROAD_RATE = BROAD_RATE
 		self.PROTECTION_RATE = PROTECTION_RATE
 		self.DEATH_RATE = DEATH_RATE
@@ -25,26 +33,34 @@ class PeoplePool:
 		self.Te = []
 		self.Ti = []
 		self.in_touch = 0
-		if can_exposed_infect == True:
-			self.can_infect_status = [1, 2]
-		else:
-			self.can_infect_status = [2]
+		self.can_infect_status = [1, 2] if can_exposed_infect == True else [2] 
 		for i in range(num):
-			x = self.SCALE*np.random.normal(0, 1) + city.centerX
-			y = self.SCALE*np.random.normal(0, 1) + city.centerY
-			self.peoples = np.append(self.peoples, People(x, y))
+			x_init = self.SCALE*np.random.normal(0, 1) + city[0]
+			y_init = self.SCALE*np.random.normal(0, 1) + city[1]
+			#[0]x, [1]y, [2]status, [3]bed, [4]infected_time, [5]confirmed_time, [6]hospitalized_time, [7]immuned_time
+			people = [[x_init, y_init, 0, None, None, None, None, None]]
+			self.peoples = np.r_[self.peoples, people]
 	
 	def getX(self, included=False):
-		return np.array([people.x for people in self.peoples if not ((included == False) and (people.status == 3 or people.status == 5))])
-
+		if included:
+			return self.peoples[(self.peoples[:,2] != 3) | (self.peoples[:,2] != 5)][:, x]
+		else:
+			return self.peoples[:, x]
+	
 	def getY(self, included=False):
-		return np.array([people.y for people in self.peoples if not ((included == False) and (people.status == 3 or people.status == 5))])
+		if included:
+			return self.peoples[(self.peoples[:,2] != 3) | (self.peoples[:,2] != 5)][:, y]
+		else:
+			return self.peoples[:, y]
 
 	def getStatus(self, included=False):
-		return np.array([people.status for people in self.peoples if not ((included == False) and (people.status == 3 or people.status == 5))])
+		if included:
+			return self.peoples[(self.peoples[:,2] != 3) | (self.peoples[:,2] != 5)][:, status]
+		else:
+			return self.peoples[:, status]
 
 	def getCoordinates(self):
-		return np.array([(i.x, i.y) for i in self.peoples])
+		return self.peoples[:, [0, 1]]
 
 	def update(self, time, hospital, cond):
 		cond.acquire()
@@ -54,59 +70,63 @@ class PeoplePool:
 		self.u *= protection_factor
 		self.DEATH_RATE *= protection_factor
 		self.in_touch = 0
+		exposed_time = np.random.normal(self.EXPOSED_TIME, self.FLUCTUATION, size=(self.num, 1))
+		hospital_receive_time = np.random.normal(self.HOSPITAL_RECEIVE_TIME, self.FLUCTUATION, size=(self.num, 1))
+		cure_time = np.random.normal(self.CURE_TIME, self.FLUCTUATION, size=(self.num, 1))
+		immune_time = np.random.normal(self.IMMUNED_TIME, self.FLUCTUATION, size=(self.num, 1))
 		peoples = self.peoples
 		coord = self.getCoordinates()
 		dists = cdist(coord, coord)
 		for idx, people in enumerate(peoples):
-			if people.status == 0:
+			if people[status] == 0:
 				index_neighbors = np.where(dists[idx] < self.SAFETY_DIST)[0]
 				for index in index_neighbors:
-					if peoples[index].status in self.can_infect_status:
+					if peoples[index][status] in self.can_infect_status:
 							self.in_touch += 1
 							if np.random.rand() < self.BROAD_RATE:
-								people.infected_time = time
-								people.status = 1
+								people[infected_time] = time
+								people[status] = 1
 								# break
-			elif people.status == 1:
-				if (time - people.infected_time) > np.random.randint(self.EXPOSED_TIME-self.FLUCTUATION, self.EXPOSED_TIME+self.FLUCTUATION+1):
-					people.confirmed_time = time
-					people.status = 2
-					self.Te.append(time-people.infected_time)
-			elif people.status == 2:
+			elif people[status] == 1:
+				if (time - people[infected_time]) > exposed_time[idx][0]:
+					people[confirmed_time] = time
+					people[status] = 2
+					self.Te.append(time-people[infected_time])
+			elif people[status] == 2:
 				if np.random.rand() < self.DEATH_RATE:
-					people.status = 5
-				elif (time - people.confirmed_time) > np.random.randint(self.HOSPITAL_RECEIVE_TIME-self.FLUCTUATION, self.HOSPITAL_RECEIVE_TIME+self.FLUCTUATION+1):
+					people[status] = 5
+				elif (time - people[confirmed_time]) > hospital_receive_time[idx][0]:
 					tmp = hospital.pickBed()
-					if tmp == None:
+					if len(tmp) == 0: 
 						print(f"Time={time:<6}无隔离病房床位")
 					else:
-						people.bed = tmp
-						people.status = 3
-						people.hospitalized_time = time
-						self.Ti.append(time-people.confirmed_time)
-						self.Tg.append(time-people.infected_time)
-			elif people.status == 3:
+						people[bed] = tmp
+						people[status] = 3
+						people[hospitalized_time] = time
+						self.Ti.append(time-people[confirmed_time])
+						self.Tg.append(time-people[infected_time])
+			elif people[status] == 3:
 				if np.random.rand() < self.DEATH_RATE / 10:
-					people.status = 5
-					people.bed.isEmpty = True
-					people.bed = None
-				elif (time - people.hospitalized_time) > np.random.randint(self.CURE_TIME-self.FLUCTUATION, self.CURE_TIME+self.FLUCTUATION+1):
+					people[status] = 5
+					people[bed][2] = False
+					people[bed] = None
+				elif (time - people[hospitalized_time]) > cure_time[idx][0]:
 					if self.recovered_included:
-						people.status = 4
-						people.immuned_time = time
+						people[status] = 4
+						people[immuned_time] = time
 					else:
-						people.status = 0
-					people.bed.isEmpty = True
-					people.bed = None
-					people.hospitalized_time = None
-					people.confirmed_time = None
-					people.infected_time = None
-			elif people.status == 4:
-				if (time - people.immuned_time) > np.random.randint(self.IMMUNED_TIME-self.FLUCTUATION, self.IMMUNED_TIME+self.FLUCTUATION+1):
-					people.immuned_time = None
-					people.status = 0
-			elif people.status == 5:
+						people[status] = 0
+					people[bed][2] = False
+					people[bed] = None
+					people[hospitalized_time] = None
+					people[confirmed_time] = None
+					people[infected_time] = None
+			elif people[status] == 4:
+				if (time - people[immuned_time]) > immune_time[idx][0]:
+					people[immuned_time] = None
+					people[status] = 0
+			elif people[status] == 5:
 				continue
-			people.move(self.u, self.SCALE)
+		peoples[:, [0, 1]] += self.u*self.SCALE/50*np.random.randn(self.num, 2)
 		cond.notify()
 		cond.release()

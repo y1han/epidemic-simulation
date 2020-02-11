@@ -1,20 +1,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import animation
-from bed import Bed
-from city import City
 from hospital import Hospital
-from people import People
 from peoplepool import PeoplePool
 from threading import Thread, Condition
-# import time as tm
 
 line = ['l', 'line']
 
-def graph(city, pool, hos, mode=line[0]):
+def graph(pool, hos, mode=line[0]):
 	#0未感染, 1潜伏期, 2确诊, 3住院(在地图上无), 4免疫期, 5病死, 6总体得病(仅包含确诊), 7总存活人数, 8传染源, 
 	colors_people = ['white', 'yellow', 'red', 'black', 'green', 'black', 'purple', 'grey', 'blue'] 
-	colors_bed = ['red', 'black'] #0有人，1无人
+	colors_bed = ['black', 'red'] #0无人，1有人
 	colors_statics = ['white'] #1 R0
 	PERSON_COUNT = pool.num
 	BED_COUNT = hos.bed_counts
@@ -56,14 +52,11 @@ def graph(city, pool, hos, mode=line[0]):
 
 	def multi_process(time):
 		cond = Condition()
-		# start = tm.time()
 		animate_thread = Thread(target=animate, args=(time, cond), name='animate')
 		update_thread = Thread(target=pool.update, args=(time, hos, cond), name='update')
 		update_thread.start()
 		animate_thread.start()
 		update_thread.join()
-		# end = tm.time()
-		# print(f'Time={time:<6}运行用时{(end-start):.2f}秒')
 		return 0
 
 	def animate(time, cond):
@@ -76,7 +69,7 @@ def graph(city, pool, hos, mode=line[0]):
 		exposed = np.sum(status == 1)
 		infective = np.sum(status == 2)
 		recovered = np.sum(status == 4)
-		hospitalized = np.sum(status_hos == False)
+		hospitalized = np.sum(status_hos == 1)
 		diagnosed = infective + hospitalized # 仅包含确诊
 		contagious = exposed + infective # 能传染给他人的
 		total = susceptible + exposed + diagnosed + recovered # SEIR
@@ -182,5 +175,5 @@ def graph(city, pool, hos, mode=line[0]):
 			ax5_diagnosed_data[0] = diagnosed
 			ax6_r0_data[0] = R0
 
-	ani = animation.FuncAnimation(fig=fig, init_func=init, interval=1, func=multi_process, repeat=False)
+	ani = animation.FuncAnimation(fig=fig, init_func=init, func=multi_process, repeat=False)
 	plt.show()
