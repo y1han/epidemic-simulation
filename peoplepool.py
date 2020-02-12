@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.spatial.distance import cdist
+from scipy.spatial import cKDTree
 
 dic = {'x':0, 'y':1, 'status':2, 'bed':3, 'infected_time':4, 'confirmed_time':5, 'hospitalized_time':6, 'immuned_time':7}
 x = dic['x']
@@ -12,7 +12,7 @@ hospitalized_time = dic['hospitalized_time']
 immuned_time = dic['immuned_time']
 
 class PeoplePool:
-	def __init__(self, num, city, BROAD_RATE, PROTECTION_RATE, DEATH_RATE, EXPOSED_TIME, IMMUNED_TIME, \
+	def __init__(self, num, city, SCALE, BROAD_RATE, PROTECTION_RATE, DEATH_RATE, EXPOSED_TIME, IMMUNED_TIME, \
 			HOSPITAL_RECEIVE_TIME, CURE_TIME, SAFETY_DIST, u, FLUCTUATION, can_exposed_infect, recovered_included):
 		self.num = num
 		self.peoples = np.empty(shape=(0, len(dic)), dtype=int)
@@ -25,7 +25,7 @@ class PeoplePool:
 		self.IMMUNED_TIME = IMMUNED_TIME
 		self.SAFETY_DIST = SAFETY_DIST
 		self.FLUCTUATION = FLUCTUATION
-		self.SCALE = 1000
+		self.SCALE = SCALE
 		self.u = np.exp(u)
 		self.can_exposed_infect = can_exposed_infect
 		self.recovered_included = recovered_included
@@ -42,25 +42,36 @@ class PeoplePool:
 			self.peoples = np.r_[self.peoples, people]
 	
 	def getX(self, included=False):
-		if included:
-			return self.peoples[(self.peoples[:,2] != 3) | (self.peoples[:,2] != 5)][:, x]
+		if not included:
+			return self.peoples[(self.peoples[:,2] != 3) & (self.peoples[:,2] != 5)][:, x]
 		else:
 			return self.peoples[:, x]
 	
 	def getY(self, included=False):
-		if included:
-			return self.peoples[(self.peoples[:,2] != 3) | (self.peoples[:,2] != 5)][:, y]
+		if not included:
+			return self.peoples[(self.peoples[:,2] != 3) & (self.peoples[:,2] != 5)][:, y]
 		else:
 			return self.peoples[:, y]
 
 	def getStatus(self, included=False):
-		if included:
-			return self.peoples[(self.peoples[:,2] != 3) | (self.peoples[:,2] != 5)][:, status]
+		if not included:
+			return self.peoples[(self.peoples[:,2] != 3) & (self.peoples[:,2] != 5)][:, status]
 		else:
 			return self.peoples[:, status]
 
-	def getCoordinates(self):
-		return self.peoples[:, [0, 1]]
+	def getCoordinates(self, included=False, only=None):
+		if not included:
+			return self.peoples[(self.peoples[:,2] != 3) & (self.peoples[:,2] != 5)][:, [0, 1]]
+		elif only == 23:
+			if self.can_infect_status == [1, 2]:
+				return self.peoples[(self.peoples[:,2] == 1) | (self.peoples[:,2] == 2)][:, [0, 1]]
+			else:
+				return self.peoples[self.peoples[:,2] == 2][:, [0, 1]]
+		elif only == 1:
+			return self.peoples[self.peoples[:,2] == 0][:, [0, 1]]
+		else:
+			return self.peoples[:, [0, 1]]
+		
 
 	def update(self, time, hospital, cond):
 		cond.acquire()
@@ -69,24 +80,26 @@ class PeoplePool:
 		self.BROAD_RATE *= protection_factor
 		self.u *= protection_factor
 		self.DEATH_RATE *= protection_factor
-		self.in_touch = 0
 		exposed_time = np.random.normal(self.EXPOSED_TIME, self.FLUCTUATION, size=(self.num, 1))
 		hospital_receive_time = np.random.normal(self.HOSPITAL_RECEIVE_TIME, self.FLUCTUATION, size=(self.num, 1))
 		cure_time = np.random.normal(self.CURE_TIME, self.FLUCTUATION, size=(self.num, 1))
 		immune_time = np.random.normal(self.IMMUNED_TIME, self.FLUCTUATION, size=(self.num, 1))
 		peoples = self.peoples
 		coord = self.getCoordinates()
-		dists = cdist(coord, coord)
+		coord_susceptible = self.getCoordinates(True, 1)
+		coord_contagious = self.getCoordinates(True, 23)
+		tree = cKDTree(coord)
+		tree_susceptible = cKDTree(coord_susceptible)
+		tree_contagious = cKDTree(coord_contagious)
+		self.in_touch = tree_susceptible.count_neighbors(tree_contagious, r=self.SAFETY_DIST)
 		for idx, people in enumerate(peoples):
 			if people[status] == 0:
-				index_neighbors = np.where(dists[idx] < self.SAFETY_DIST)[0]
-				for index in index_neighbors:
+				for index in tree.query_ball_point(people[0:2], self.SAFETY_DIST):
 					if peoples[index][status] in self.can_infect_status:
-							self.in_touch += 1
 							if np.random.rand() < self.BROAD_RATE:
 								people[infected_time] = time
 								people[status] = 1
-								# break
+								break
 			elif people[status] == 1:
 				if (time - people[infected_time]) > exposed_time[idx][0]:
 					people[confirmed_time] = time

@@ -62,7 +62,7 @@ def graph(pool, hos, mode=line[0]):
 	def animate(time, cond):
 		cond.acquire()
 		cond.notify()
-		boundry = 5 * pool.SCALE
+		boundry = 5.5 * pool.SCALE
 		status = pool.getStatus()
 		status_hos = hos.getStatus()
 		susceptible = np.sum(status == 0)
@@ -110,7 +110,7 @@ def graph(pool, hos, mode=line[0]):
 
 		ax1.clear()
 		ax1.scatter(pool.getX(), pool.getY(), c = [colors_people[j] for j in status], marker = '.', \
-					alpha = 0.6, s = 10)
+					alpha = 0.5, s = 10)
 		ax1.set_title(f'Te:{Te:<10.2f}Ti:{Ti:<10.2f}Tg:{Tg:<10.2f}R0:{R0:.2f}\nTime:{time:<10}Susceptible:{susceptible:<10}Exposed:{exposed:<10}Infective:{infective:<10}Recovered:{recovered}')
 		ax1.set_xticks([])
 		ax1.set_yticks([])

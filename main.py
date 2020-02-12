@@ -5,15 +5,16 @@ from graph import graph
 
 def init():
 	ORIGINAL_COUNT = 50 #初始感染数量
-	BROAD_RATE = 0.8 #被传染概率
+	BROAD_RATE = 0.5 #被传染概率
 	PROTECTION_RATE = 0.001 # 保护措施增长率(连续)(影响BROAD_RATE, DEATH_RATE, u)
 	EXPOSED_TIME = 5 #平均潜伏时间
 	HOSPITAL_RECEIVE_TIME = 3 #平均医院收治时间
 	CURE_TIME = 10 #平均治疗时间
 	IMMUNED_TIME = 30 #平均免疫期时间
 	DEATH_RATE = 0.01/(CURE_TIME+10*HOSPITAL_RECEIVE_TIME) #每日死亡概率
-	BED_COUNT = 1000 #医院床位
+	BED_COUNT = 2000 #医院床位
 	SAFETY_DIST = 50 #安全距离
+	SCALE = SAFETY_DIST * 20 #大小
 	FLUCTUATION = 4 #各参数与平均值之间的波动
 	u = 1 #流动意向
 	PERSON_COUNT = 10000 #城市内人数
@@ -21,7 +22,7 @@ def init():
 	recovered_included = True # 是否有免疫期
 
 	city = (0, 0)
-	pool = PeoplePool(PERSON_COUNT, city, BROAD_RATE, PROTECTION_RATE, DEATH_RATE, EXPOSED_TIME, IMMUNED_TIME, \
+	pool = PeoplePool(PERSON_COUNT, city, SCALE, BROAD_RATE, PROTECTION_RATE, DEATH_RATE, EXPOSED_TIME, IMMUNED_TIME, \
 					  HOSPITAL_RECEIVE_TIME, CURE_TIME, SAFETY_DIST, u, FLUCTUATION, \
 					  can_exposed_infect, recovered_included)
 	hos = Hospital(BED_COUNT)
