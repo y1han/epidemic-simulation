@@ -1,5 +1,5 @@
-# virus-simulation
-  A python virus simultation programme  
+# epidemic-simulation
+  A python epidemic simultation programme  
 
 #### 图表信息:  
 	Total 总存活人数  
