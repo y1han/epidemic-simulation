@@ -4,6 +4,7 @@ from matplotlib import animation
 from hospital import Hospital
 from peoplepool import PeoplePool
 from threading import Thread, Condition
+import time as tm
 
 line = ['l', 'line']
 
@@ -50,13 +51,26 @@ def graph(pool, hos, mode=line[0]):
 	def init():
 		pass
 
+	anim_running = True
+	def onClick(event):
+		nonlocal anim_running
+		if anim_running:
+			anim.event_source.stop()
+			anim_running = False
+		else:
+			anim.event_source.start()
+			anim_running = True
+	fig.canvas.mpl_connect('button_press_event', onClick)
+
 	def multi_process(time):
+		start = tm.time()
 		cond = Condition()
 		animate_thread = Thread(target=animate, args=(time, cond), name='animate')
 		update_thread = Thread(target=pool.update, args=(time, hos, cond), name='update')
 		update_thread.start()
 		animate_thread.start()
 		update_thread.join()
+		print(tm.time()-start)
 		return 0
 
 	def animate(time, cond):
@@ -175,5 +189,5 @@ def graph(pool, hos, mode=line[0]):
 			ax5_diagnosed_data[0] = diagnosed
 			ax6_r0_data[0] = R0
 
-	ani = animation.FuncAnimation(fig=fig, init_func=init, func=multi_process, repeat=False)
+	anim = animation.FuncAnimation(fig=fig, init_func=init, func=multi_process, repeat=False)
 	plt.show()
