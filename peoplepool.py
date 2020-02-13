@@ -59,18 +59,16 @@ class PeoplePool:
 		else:
 			return self.peoples[:, status]
 
-	def getCoordinates(self, included=False, only=None):
-		if not included:
-			return self.peoples[(self.peoples[:,2] != 3) & (self.peoples[:,2] != 5)][:, [0, 1]]
-		elif only == 23:
+	def getCoordinates(self, only=None):
+		if only == 23:
 			if self.can_infect_status == [1, 2]:
-				return self.peoples[(self.peoples[:,2] == 1) | (self.peoples[:,2] == 2)][:, [0, 1]]
+				return self.peoples[(self.peoples[:,2] == 1) | (self.peoples[:,2] == 2)][:, [x, y]]
 			else:
-				return self.peoples[self.peoples[:,2] == 2][:, [0, 1]]
+				return self.peoples[self.peoples[:,2] == 2][:, [x, y]]
 		elif only == 1:
-			return self.peoples[self.peoples[:,2] == 0][:, [0, 1]]
+			return self.peoples[self.peoples[:,2] == 0][:, [x, y]]
 		else:
-			return self.peoples[:, [0, 1]]
+			return self.peoples[:, [x, y]]
 		
 
 	def update(self, time, hospital, cond):
@@ -86,8 +84,8 @@ class PeoplePool:
 		immune_time = np.random.normal(self.IMMUNED_TIME, self.FLUCTUATION, size=(self.num, 1))
 		peoples = self.peoples
 		coord = self.getCoordinates()
-		coord_susceptible = self.getCoordinates(True, 1)
-		coord_contagious = self.getCoordinates(True, 23)
+		coord_susceptible = self.getCoordinates(1)
+		coord_contagious = self.getCoordinates(23)
 		tree = cKDTree(coord)
 		tree_susceptible = cKDTree(coord_susceptible)
 		tree_contagious = cKDTree(coord_contagious)
