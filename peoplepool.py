@@ -84,12 +84,15 @@ class PeoplePool:
 		immune_time = np.random.normal(self.IMMUNED_TIME, self.FLUCTUATION, size=(self.num, 1))
 		peoples = self.peoples
 		coord = self.getCoordinates()
+		tree = cKDTree(coord)
 		coord_susceptible = self.getCoordinates(1)
 		coord_contagious = self.getCoordinates(23)
-		tree = cKDTree(coord)
-		tree_susceptible = cKDTree(coord_susceptible)
-		tree_contagious = cKDTree(coord_contagious)
-		self.in_touch = tree_susceptible.count_neighbors(tree_contagious, r=self.SAFETY_DIST)
+		if len(coord_contagious) != 0:
+			tree_susceptible = cKDTree(coord_susceptible)
+			tree_contagious = cKDTree(coord_contagious)
+			self.in_touch = tree_susceptible.count_neighbors(tree_contagious, r=self.SAFETY_DIST)
+		else:
+			self.in_touch = 0
 		for idx, people in enumerate(peoples):
 			if people[status] == 0:
 				for index in tree.query_ball_point(people[0:2], self.SAFETY_DIST):
