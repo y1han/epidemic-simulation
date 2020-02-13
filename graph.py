@@ -4,7 +4,6 @@ from matplotlib import animation
 from hospital import Hospital
 from peoplepool import PeoplePool
 from threading import Thread, Condition
-import time as tm
 
 line = ['l', 'line']
 
@@ -41,13 +40,6 @@ def graph(pool, hos, mode=line[0]):
 	hosX = hos.getX()
 	hosY = hos.getY()
 
-	ax1background = fig.canvas.copy_from_bbox(ax1.bbox)
-	ax2background = fig.canvas.copy_from_bbox(ax2.bbox)
-	ax3background = fig.canvas.copy_from_bbox(ax3.bbox)
-	ax4background = fig.canvas.copy_from_bbox(ax4.bbox)
-	ax5background = fig.canvas.copy_from_bbox(ax5.bbox)
-	ax6background = fig.canvas.copy_from_bbox(ax6.bbox)
-
 	def init():
 		pass
 
@@ -63,15 +55,13 @@ def graph(pool, hos, mode=line[0]):
 	fig.canvas.mpl_connect('button_press_event', onClick)
 
 	def multi_process(time):
-		start = tm.time()
 		cond = Condition()
 		animate_thread = Thread(target=animate, args=(time, cond), name='animate')
 		update_thread = Thread(target=pool.update, args=(time, hos, cond), name='update')
 		update_thread.start()
 		animate_thread.start()
 		update_thread.join()
-		print(tm.time()-start)
-		return 0
+		return ax1, ax2, ax3, ax4, ax5, ax6
 
 	def animate(time, cond):
 		cond.acquire()
@@ -114,13 +104,6 @@ def graph(pool, hos, mode=line[0]):
 			ax5_infective_data[1] = infective
 			ax5_diagnosed_data[1] = diagnosed
 			ax6_r0_data[1] = R0
-
-		fig.canvas.restore_region(ax1background)
-		fig.canvas.restore_region(ax2background)
-		fig.canvas.restore_region(ax3background)
-		fig.canvas.restore_region(ax4background)
-		fig.canvas.restore_region(ax5background)
-		fig.canvas.restore_region(ax6background)
 
 		ax1.clear()
 		ax1.scatter(pool.getX(), pool.getY(), c = [colors_people[j] for j in status], marker = '.', \
