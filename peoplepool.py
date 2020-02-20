@@ -37,6 +37,7 @@ class PeoplePool:
 		for i in range(num):
 			x_init = self.SCALE*np.random.normal(0, 1) + city[0]
 			y_init = self.SCALE*np.random.normal(0, 1) + city[1]
+			# People Status: [0]Susceptible, [1]Exposed, [2]Infective, [3]Hospitalized, [4]Recovered, [5]Dead
 			#[0]x, [1]y, [2]status, [3]bed, [4]infected_time, [5]confirmed_time, [6]hospitalized_time, [7]immuned_time
 			people = [[x_init, y_init, 0, None, None, None, None, None]]
 			self.peoples = np.r_[self.peoples, people]
@@ -94,52 +95,52 @@ class PeoplePool:
 		else:
 			self.in_touch = 0
 		for idx, people in enumerate(peoples):
-			if people[status] == 0:
+			if people[status] == 0: # Susceptible
 				for index in tree.query_ball_point(people[0:2], self.SAFETY_DIST):
 					if peoples[index][status] in self.can_infect_status:
 							if np.random.rand() < self.BROAD_RATE:
 								people[infected_time] = time
 								people[status] = 1
 								break
-			elif people[status] == 1:
+			elif people[status] == 1: # Exposed
 				if (time - people[infected_time]) > exposed_time[idx][0]:
 					people[confirmed_time] = time
 					people[status] = 2
 					self.Te.append(time-people[infected_time])
-			elif people[status] == 2:
+			elif people[status] == 2: # Infective
 				if np.random.rand() < self.DEATH_RATE:
-					people[status] = 5
+					people[status] = 5 # Dead
 				elif (time - people[confirmed_time]) > hospital_receive_time[idx][0]:
 					tmp = hospital.pickBed()
 					if len(tmp) == 0: 
 						print(f"Time={time:<6}无隔离病房床位")
 					else:
 						people[bed] = tmp
-						people[status] = 3
+						people[status] = 3 # Hospitalized
 						people[hospitalized_time] = time
 						self.Ti.append(time-people[confirmed_time])
 						self.Tg.append(time-people[infected_time])
-			elif people[status] == 3:
+			elif people[status] == 3: # Hospitalized
 				if np.random.rand() < self.DEATH_RATE / 10:
-					people[status] = 5
+					people[status] = 5 # Dead
 					people[bed][2] = False
 					people[bed] = None
 				elif (time - people[hospitalized_time]) > cure_time[idx][0]:
 					if self.recovered_included:
-						people[status] = 4
+						people[status] = 4 # Recovered
 						people[immuned_time] = time
 					else:
-						people[status] = 0
+						people[status] = 0 # Susceptible
 					people[bed][2] = False
 					people[bed] = None
 					people[hospitalized_time] = None
 					people[confirmed_time] = None
 					people[infected_time] = None
-			elif people[status] == 4:
+			elif people[status] == 4: # Recovered
 				if (time - people[immuned_time]) > immune_time[idx][0]:
 					people[immuned_time] = None
 					people[status] = 0
-			elif people[status] == 5:
+			elif people[status] == 5: # Dead
 				continue
 		peoples[:, [0, 1]] += self.u*self.SCALE/50*np.random.randn(self.num, 2)
 		cond.notify()
